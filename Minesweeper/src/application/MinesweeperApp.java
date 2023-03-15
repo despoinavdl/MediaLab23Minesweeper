@@ -3,7 +3,7 @@ package application;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
+//import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -19,6 +19,7 @@ import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
@@ -51,10 +52,10 @@ public class MinesweeperApp extends Application {
 	
 	private Tile[][] grid = new Tile[X_TILES][Y_TILES];
 	
-	private static int DIFFICULTY = 2;
+	private static int DIFFICULTY = 1;
 	private static int MINES = 9;
-	private static int SECONDS = 255;
-	private static int HYPERMINE = 1;
+	private static int SECONDS = 120;
+	private static int HYPERMINE = 0;
 	
 	private BorderPane startScene;
 	private Scene scene, gameScene;
@@ -63,7 +64,7 @@ public class MinesweeperApp extends Application {
 	private Button restartButton, closeDetailsButton, cancelCreateButton, confirmCreateButton, cancelLoadButton, confirmLoadButton, chooseFileButton;
 	private Popup overPopup, roundsPopup, createPopup, loadPopup;
 	
-	private int triesOpen, triesMark, marked, seconds_left, tilesToOpen, gameIter=0;
+	private int triesOpen, marked, seconds_left, tilesToOpen, gameIter=0;
 	private boolean victory, solved, clicked;
 	
 	private String game0[] = {"", "", "", "", ""};
@@ -85,7 +86,6 @@ public class MinesweeperApp extends Application {
 		victory = true;
 		solved = false;
 		clicked = true;
-		triesMark = 0; //for hypermine
 		triesOpen = 0; //tracks successful tries
 		marked = 0;
 		seconds_left = SECONDS;
@@ -141,6 +141,19 @@ public class MinesweeperApp extends Application {
 		});
 		
 		loadGame.setOnAction(e -> {
+			loadPopup = new Popup();
+			
+			HBox hBox = new HBox(cancelLoadButton, confirmLoadButton);
+			hBox.setSpacing(20);
+			VBox vBox = new VBox(chooseFileButton, hBox);
+			vBox.setPadding(new Insets(100));
+			vBox.setSpacing(20);
+			
+			Rectangle rectangle = new Rectangle(200, 110, Color.LIGHTGRAY);
+	        StackPane stackPane = new StackPane(rectangle, vBox);
+	        
+	        loadPopup.getContent().add(stackPane);
+			loadPopup.show(gameScene.getWindow());
 			
 		});
 		
@@ -358,7 +371,7 @@ public class MinesweeperApp extends Application {
 	}
 	
 	private int[] validateScenario(String scenario) throws InvalidDescriptionException, InvalidValueException {
-		System.out.println("validating " + scenario);
+		//System.out.println("validating " + scenario);
 		int[] conf = {0,0,0,0};
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader("./medialab/" + scenario));
@@ -367,8 +380,10 @@ public class MinesweeperApp extends Application {
 			int mines = Integer.parseInt(reader.readLine());
 			int secs = Integer.parseInt(reader.readLine());
 			int hypMine = Integer.parseInt(reader.readLine());
-			System.out.println(String.valueOf(diff) + " " + String.valueOf(mines) + 
-					" " + String.valueOf(secs) + " " + String.valueOf(hypMine));
+			reader.close();
+			
+			//System.out.println(String.valueOf(diff) + " " + String.valueOf(mines) + 
+			//		" " + String.valueOf(secs) + " " + String.valueOf(hypMine));
 			
 			conf[0] = diff;
 			conf[1] = mines; 
@@ -396,10 +411,11 @@ public class MinesweeperApp extends Application {
 					
 				default:
 					throw new InvalidValueException("Value for difficulty must be 1 or 2!");
+			
 			}
 			
 		} catch (NumberFormatException e) {
-			throw new InvalidDescriptionException("Invalid File Format");
+			throw new InvalidDescriptionException("Please choose a valid file format.");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -562,7 +578,6 @@ public class MinesweeperApp extends Application {
 			if(marked >= MINES  || this.isOpen) 
 				return;
 			
-			triesMark++;
 			if(this.hasHyperMine && triesOpen <= 3) {
 				for(int i = 0; i < X_TILES; i++) {
 					openHelp(grid[i][this.y]);
@@ -588,20 +603,8 @@ public class MinesweeperApp extends Application {
 			overPopup.hide();
 			stage.setScene(scene);
 			stage.setTitle("Medialab Minesweeper");
-			/*
-		    //close current stage
-		    Stage currentStage = (Stage) gameScene.getWindow();
-		    currentStage.close();
-
-		    // Start a new instance of the application
-		    Platform.runLater(() -> {
-		        try {
-		            new MinesweeperApp().start(new Stage());
-		        } catch (Exception e) {
-		            e.printStackTrace();
-		        }
-		    });
-		*/});
+		});
+		
 		//closeRoundsButton
 		closeDetailsButton = new Button("Close");
 		closeDetailsButton.setOnAction(event -> {
@@ -611,6 +614,12 @@ public class MinesweeperApp extends Application {
 		//cancelCreateButton
 		cancelCreateButton = new Button("Cancel");
 		cancelCreateButton.setOnAction(event -> {
+			scenarioID.setText("SCENARIO-ID");
+			difficulty.setText("Difficulty (1 or 2)");
+			minesNum.setText("Number of mines");
+			hasHyper.setText("Hypermine? (yes/no)");
+			timeAvail.setText("Time Available (in seconds)");
+			
 			createPopup.hide();
 			});
 		
@@ -637,6 +646,12 @@ public class MinesweeperApp extends Application {
 			} catch (IOException e2) {
 				e2.printStackTrace();
 			}
+			scenarioID.setText("SCENARIO-ID");
+			difficulty.setText("Difficulty (1 or 2)");
+			minesNum.setText("Number of mines");
+			hasHyper.setText("Hypermine? (yes/no)");
+			timeAvail.setText("Time Available (in seconds)");
+			
 			createPopup.hide();
 		});
 		
@@ -658,10 +673,24 @@ public class MinesweeperApp extends Application {
 					configurations = validateScenario(selectedFile.getName());
 				}
 				catch(InvalidDescriptionException e) {
-					System.out.print(e.errorMessage);
+					//System.out.print(e.errorMessage);
+					Alert alert = new Alert(Alert.AlertType.ERROR);
+					alert.setTitle("Invalid Description Alert");
+					alert.setHeaderText(null);
+					alert.getDialogPane().setStyle("-fx-font-size: 10pt;");
+					alert.setContentText(e.errorMessage);
+					alert.initOwner(loadPopup.getScene().getWindow());
+					alert.showAndWait();
 				}
 				catch(InvalidValueException e) {
-					System.out.print(e.errorMessage);
+					//System.out.print(e.errorMessage);
+					Alert alert = new Alert(Alert.AlertType.ERROR);
+					alert.setTitle("Invalid Value Alert");
+					alert.setHeaderText(null);
+					alert.getDialogPane().setStyle("-fx-font-size: 10pt;");
+					alert.setContentText(e.errorMessage);
+					alert.initOwner(loadPopup.getScene().getWindow());
+					alert.showAndWait();
 				}
 				if(configurations!=null) {
 					DIFFICULTY = configurations[0];
@@ -737,7 +766,7 @@ public class MinesweeperApp extends Application {
 	        StackPane stackPane = new StackPane(rectangle, vBox);
 	        
 	        loadPopup.getContent().add(stackPane);
-			loadPopup.show(scene.getWindow());
+			loadPopup.show(stage);//scene.getWindow()
 			
 		});
 		
