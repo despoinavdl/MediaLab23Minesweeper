@@ -42,18 +42,19 @@ import javafx.stage.Stage;
 public class MinesweeperApp extends Application {
 	
 	private static final int TILE_SIZE = 40;
-	private static final int X_TILES = 9;
-	private static final int Y_TILES = 9;
+	private static int X_TILES = 9;
+	private static int Y_TILES = 9;
 	
-	private static final int W = X_TILES * TILE_SIZE;
-	private static final int H = Y_TILES * TILE_SIZE;
+	private static int W = X_TILES * TILE_SIZE;
+	private static int H = Y_TILES * TILE_SIZE;
 	
 	
 	private Tile[][] grid = new Tile[X_TILES][Y_TILES];
 	
-	private static final int DIFFICULTY = 2;
-	private static final int MINES = 9;
-	private static final int SECONDS = 55;
+	private static int DIFFICULTY = 2;
+	private static int MINES = 9;
+	private static int SECONDS = 255;
+	private static int HYPERMINE = 1;
 	
 	private BorderPane startScene;
 	private Scene scene, gameScene;
@@ -88,7 +89,16 @@ public class MinesweeperApp extends Application {
 		triesOpen = 0; //tracks successful tries
 		marked = 0;
 		seconds_left = SECONDS;
+		
+		X_TILES = DIFFICULTY==1 ? 9 : 16;
+		Y_TILES = DIFFICULTY==1 ? 9 : 16;
+		grid = new Tile[X_TILES][Y_TILES];
+		
+		W = X_TILES * TILE_SIZE;
+		H = Y_TILES * TILE_SIZE;
+		
 		tilesToOpen = X_TILES*Y_TILES - MINES;
+		
 		
 		BorderPane borderpane = new BorderPane();
 		
@@ -207,7 +217,7 @@ public class MinesweeperApp extends Application {
 		}
 		
 		int m = MINES;
-		if(DIFFICULTY==2) m--;
+		if(HYPERMINE==1) m--;
 		while(m > 0) {
 			int randomX = ThreadLocalRandom.current().nextInt(0, X_TILES);
 			int randomY = ThreadLocalRandom.current().nextInt(0, Y_TILES);
@@ -229,7 +239,7 @@ public class MinesweeperApp extends Application {
 		
 		
 		int randomX, randomY;
-		if(DIFFICULTY==2) {
+		if(HYPERMINE==1) {
 			do {
 				randomX = ThreadLocalRandom.current().nextInt(0, X_TILES);
 				randomY = ThreadLocalRandom.current().nextInt(0, Y_TILES);
@@ -347,8 +357,9 @@ public class MinesweeperApp extends Application {
 		}
 	}
 	
-	private void validateScenario(String scenario) throws InvalidDescriptionException, InvalidValueException {
-		//System.out.print("validating " + scenario);
+	private int[] validateScenario(String scenario) throws InvalidDescriptionException, InvalidValueException {
+		System.out.println("validating " + scenario);
+		int[] conf = {0,0,0,0};
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader("./medialab/" + scenario));
 			
@@ -356,11 +367,35 @@ public class MinesweeperApp extends Application {
 			int mines = Integer.parseInt(reader.readLine());
 			int secs = Integer.parseInt(reader.readLine());
 			int hypMine = Integer.parseInt(reader.readLine());
+			System.out.println(String.valueOf(diff) + " " + String.valueOf(mines) + 
+					" " + String.valueOf(secs) + " " + String.valueOf(hypMine));
+			
+			conf[0] = diff;
+			conf[1] = mines; 
+			conf[2] = secs;
+			conf[3] = hypMine; 
 			
 			switch(diff) {
 				case(1):
-					
+					if(mines < 9 || mines > 11) 
+						throw new InvalidValueException("Number of mines must be between 9-11 for this difficulty!");
+					if(secs < 120 || secs > 180)
+						throw new InvalidValueException("Available seconds must be between 120-180 for this difficulty!");
+					if(hypMine != 0)
+						throw new InvalidValueException("Hypermine is not available for this difficulty!");
 					break;
+					
+				case(2):
+					if(mines < 35 || mines > 45) 
+						throw new InvalidValueException("Number of mines must be between 35-45 for this difficulty!");
+					if(secs < 240 || secs > 360)
+						throw new InvalidValueException("Available seconds must be between 240-360 for this difficulty!");
+					if(hypMine != 0 && hypMine!= 1)
+						throw new InvalidValueException("Invalid hypermine value!");
+					break;
+					
+				default:
+					throw new InvalidValueException("Value for difficulty must be 1 or 2!");
 			}
 			
 		} catch (NumberFormatException e) {
@@ -368,6 +403,8 @@ public class MinesweeperApp extends Application {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		return conf;
 	}
 	
 
@@ -584,9 +621,16 @@ public class MinesweeperApp extends Application {
 			BufferedWriter writer = null;
 			try {
 				writer = new BufferedWriter(new FileWriter("./medialab/" + scenarioID.getText() + ".txt"));
+				if(hasHyper.getText().equals("yes")) 
+					hasHyper.setText("1");
+				else if(hasHyper.getText().equals("no"))
+					hasHyper.setText("0");
+				else
+					hasHyper.setText("invalid");
+					
 
 				writer.write(difficulty.getText() + "\n" + minesNum.getText() + "\n" + timeAvail.getText() + "\n" + 
-				(hasHyper.getText().equals("yes") ? "1" : "0"));
+				hasHyper.getText());
 				
 				writer.close();
 				
@@ -609,15 +653,23 @@ public class MinesweeperApp extends Application {
 		confirmLoadButton = new Button("Confirm");
 		confirmLoadButton.setOnAction(event -> {
 			if(selectedFile!=null) {
+				int[] configurations = null;
 				try {
-					validateScenario(selectedFile.getName());
+					configurations = validateScenario(selectedFile.getName());
 				}
 				catch(InvalidDescriptionException e) {
-					
+					System.out.print(e.errorMessage);
 				}
 				catch(InvalidValueException e) {
-					
+					System.out.print(e.errorMessage);
 				}
+				if(configurations!=null) {
+					DIFFICULTY = configurations[0];
+					MINES = configurations[1];
+					SECONDS = configurations[2];
+					HYPERMINE = configurations[3];
+				}
+				loadPopup.hide();
 			}
 		});
 		
