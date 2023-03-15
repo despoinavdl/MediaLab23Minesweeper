@@ -67,7 +67,7 @@ public class Tile extends StackPane {
 	 * If the Tile is empty, all adjacent tiles are opened recursively.
 	 * If all Tiles that don't contain a mine are opened, the game ends in victory.
 	 */
-	void open() {
+	public void open() {
 		if(isOpen) return;
 		
 		if(MinesweeperApp.clicked) {
@@ -110,7 +110,7 @@ public class Tile extends StackPane {
 	 * Tiles opened by this function 
 	 * @param tile The tile to be opened.
 	 */
-	void openHelp(Tile tile) {
+	public void openHelp(Tile tile) {
 		if(tile.isOpen) return;
 		
 		if(tile.isMarked) {
@@ -152,7 +152,7 @@ public class Tile extends StackPane {
 	 * If the tile has a hypermine and the player has not yet opened three tiles, the hypermine explodes,
 	 * and all tiles in the same row and column as the hypermine are opened using the helper function openHelp().
 	 */
-	void mark() {
+	public void mark() {
 		if(isMarked) {
 			this.border.setFill(Color.BLACK);
 			MinesweeperApp.marked--;
