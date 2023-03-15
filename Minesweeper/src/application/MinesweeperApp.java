@@ -42,45 +42,65 @@ import javafx.stage.Stage;
 
 public class MinesweeperApp extends Application {
 	
-	private static final int TILE_SIZE = 40;
-	private static int X_TILES = 9;
-	private static int Y_TILES = 9;
+	static final int TILE_SIZE = 40;
+	static int X_TILES = 9;
+	static int Y_TILES = 9;
 	
-	private static int W = X_TILES * TILE_SIZE;
-	private static int H = Y_TILES * TILE_SIZE;
+	static int W = X_TILES * TILE_SIZE;
+	static int H = Y_TILES * TILE_SIZE;
 	
 	
-	private Tile[][] grid = new Tile[X_TILES][Y_TILES];
+	static Tile[][] grid = new Tile[X_TILES][Y_TILES];
 	
-	private static int DIFFICULTY = 1;
-	private static int MINES = 9;
-	private static int SECONDS = 120;
-	private static int HYPERMINE = 0;
+	static int DIFFICULTY = 1;
+	static int MINES = 9;
+	static int SECONDS = 120;
+	static int HYPERMINE = 0;
 	
-	private BorderPane startScene;
-	private Scene scene, gameScene;
-	private Label topBar;
-	private Timeline timeline;
-	private Button restartButton, closeDetailsButton, cancelCreateButton, confirmCreateButton, cancelLoadButton, confirmLoadButton, chooseFileButton;
-	private Popup overPopup, roundsPopup, createPopup, loadPopup;
+	BorderPane startScene;
+	static Scene scene;
+	static Scene gameScene;
+	static Label topBar;
+	static Timeline timeline;
+	static Button restartButton;
+	Button closeDetailsButton;
+	Button cancelCreateButton;
+	Button confirmCreateButton;
+	Button cancelLoadButton;
+	Button confirmLoadButton;
+	Button chooseFileButton;
+	static Popup overPopup;
+	static Popup roundsPopup;
+	static Popup createPopup;
+	static Popup loadPopup;
 	
-	private int triesOpen, marked, seconds_left, tilesToOpen, gameIter=0;
-	private boolean victory, solved, clicked;
+	static int triesOpen, marked, seconds_left, tilesToOpen, gameIter=0;
+	static boolean victory, solved, clicked;
 	
-	private String game0[] = {"", "", "", "", ""};
-	private String game1[] = {"", "", "", "", ""};
-	private String game2[] = {"", "", "", "", ""};
-	private String game3[] = {"", "", "", "", ""};
-	private String game4[] = {"", "", "", "", ""};
+	static String game0[] = {"", "", "", "", ""};
+	static String game1[] = {"", "", "", "", ""};
+	static String game2[] = {"", "", "", "", ""};
+	static String game3[] = {"", "", "", "", ""};
+	static String game4[] = {"", "", "", "", ""};
 	
-	private TextField scenarioID = new TextField("SCENARIO-ID");
-	private TextField difficulty = new TextField("Difficulty (1 or 2)");
-	private TextField minesNum = new TextField("Number of mines");
-	private TextField hasHyper = new TextField("Hypermine? (yes/no)");
-	private TextField timeAvail = new TextField("Time Available (in seconds)");
+	static TextField scenarioID = new TextField("SCENARIO-ID");
+	static TextField difficulty = new TextField("Difficulty (1 or 2)");
+	static TextField minesNum = new TextField("Number of mines");
+	static TextField hasHyper = new TextField("Hypermine? (yes/no)");
+	static TextField timeAvail = new TextField("Time Available (in seconds)");
 	
-	private FileChooser filechooser = new FileChooser();
-	private File selectedFile;
+	static FileChooser filechooser = new FileChooser();
+	static File selectedFile;
+	
+	MenuBar menubar;
+	Menu application;
+	MenuItem createGame;
+	MenuItem loadGame;
+	MenuItem startGame;
+	MenuItem exitGame;
+	Menu details;
+	MenuItem rounds;
+	MenuItem solution;
 	
 	private BorderPane createContent() {
 		victory = true;
@@ -102,96 +122,7 @@ public class MinesweeperApp extends Application {
 		
 		BorderPane borderpane = new BorderPane();
 		
-		
-		MenuBar menubar = new MenuBar();
-		
-		Menu application = new Menu("Application");
-		MenuItem createGame = new MenuItem("Create");
-		MenuItem loadGame = new MenuItem("Load");
-		MenuItem startGame = new MenuItem("Start");
-		MenuItem exitGame = new MenuItem("Exit");
-		
-		application.getItems().addAll(createGame, loadGame, startGame, exitGame);
-		
-		Menu details = new Menu("Details");
-		MenuItem rounds = new MenuItem("Rounds");
-		MenuItem solution = new MenuItem("Solution");
-		
-		details.getItems().addAll(rounds, solution);
-		
-		menubar.getMenus().addAll(application, details);
-		
-		borderpane.setTop(menubar);
-		
-		createGame.setOnAction(e -> {
-			createPopup = new Popup();
-			
-	        // Create the VBox to hold the text fields
-	        HBox hBox = new HBox(cancelCreateButton, confirmCreateButton);
-	        VBox vBox = new VBox(10, scenarioID, difficulty, minesNum, hasHyper, timeAvail, hBox);
-	        vBox.setPadding(new Insets(10));
-	        
-	        // Create the rectangle background
-	        Rectangle rectangle = new Rectangle(250, 220, Color.LIGHTGRAY);
-	        StackPane stackPane = new StackPane(rectangle, vBox);
-	        
-	        createPopup.getContent().add(stackPane);
-			createPopup.show(gameScene.getWindow());
-			
-		});
-		
-		loadGame.setOnAction(e -> {
-			loadPopup = new Popup();
-			
-			HBox hBox = new HBox(cancelLoadButton, confirmLoadButton);
-			hBox.setSpacing(20);
-			VBox vBox = new VBox(chooseFileButton, hBox);
-			vBox.setPadding(new Insets(100));
-			vBox.setSpacing(20);
-			
-			Rectangle rectangle = new Rectangle(200, 110, Color.LIGHTGRAY);
-	        StackPane stackPane = new StackPane(rectangle, vBox);
-	        
-	        loadPopup.getContent().add(stackPane);
-			loadPopup.show(gameScene.getWindow());
-			
-		});
-		
-		startGame.setOnAction(e -> {
-			gameScene = new Scene(createContent(), W, H+50);
-			Stage currStage = (Stage) menubar.getScene().getWindow();
-			currStage.setScene(gameScene);
-			currStage.setTitle("Medialab Minesweeper");
-		});
-		
-		exitGame.setOnAction(e -> {
-			Platform.exit();
-		});
-		
-		rounds.setOnAction(e -> {
-			roundsPopup = new Popup();
-			 VBox detailsVBox = new VBox(historyFormat(game0, 1), historyFormat(game1, 2),
-					 historyFormat(game2, 3), historyFormat(game3, 4), historyFormat(game4, 5), closeDetailsButton);
-			 detailsVBox.setAlignment(Pos.BASELINE_CENTER);
-				
-			StackPane content = new StackPane(new Rectangle(360,130,Color.ALICEBLUE), detailsVBox);
-				
-			roundsPopup.getContent().add(content);
-				
-			roundsPopup.show(gameScene.getWindow());
-			 
-		});
-		
-		solution.setOnAction(e -> {
-			solved = true;
-			for(int y = 0; y < Y_TILES; y++) {
-				for(int x = 0; x < X_TILES; x++) {
-					Tile tile = grid[x][y];
-					tile.openHelp(tile);
-				}
-			}
-			gameOver("solution");
-		});
+		borderpane.setTop(menubar); //menubar
 		
 		topBar = new Label("Mines: " + MINES + "   Marked Tiles: " + marked + "   Time Left: " + String.format("%02d:%02d", seconds_left / 60, seconds_left % 60));
 		borderpane.setCenter(topBar);
@@ -300,7 +231,7 @@ public class MinesweeperApp extends Application {
 		return gameLabel;
 	}
 	
-	private void historyHelp(String game[]) {
+	private static void historyHelp(String game[]) {
 		game[0] = String.valueOf(MINES); //Number of Mines
 		if(triesOpen!=0) triesOpen--;
 		game[1] = String.valueOf(triesOpen); //Successful tries
@@ -312,7 +243,7 @@ public class MinesweeperApp extends Application {
 	}
 	
 	//called after ending a game successfully
-	private void addHistory() {
+	private static void addHistory() {
 		switch(gameIter) {
 			case 1: 
 				historyHelp(game1);
@@ -334,7 +265,7 @@ public class MinesweeperApp extends Application {
 		gameIter++;
 	}
 	
-	private void gameOver(String cause) {
+	public static void gameOver(String cause) {
 		//if(!victory) return; ////////??????????
 		
 		timeline.stop();
@@ -425,7 +356,7 @@ public class MinesweeperApp extends Application {
 	
 
 	
-	private List<Tile> getNeighbours(Tile tile) {
+	public static List<Tile> getNeighbours(Tile tile) {
 		List<Tile> neighbours = new ArrayList<>();
 		
 		int[] points = new int[] {
@@ -453,157 +384,9 @@ public class MinesweeperApp extends Application {
 		
 		return neighbours;
 	} 
-
-	
-	
-	private class Tile extends StackPane {
-		private int x,y;
-		private boolean hasMine, hasHyperMine, isOpen = false, isMarked = false;
-		
-		private Rectangle border = new Rectangle(TILE_SIZE - 2, TILE_SIZE -2);
-		private Text text = new Text();
-		
-		
-		public Tile(int x, int y, boolean hasMine, boolean hasHyperMine) {
-			this.x = x;
-			this.y = y;
-			this.hasMine = hasMine;
-			this.hasHyperMine = hasHyperMine;
-		
-			border.setStroke(Color.GREEN);
-			border.setFill(Color.BLACK);
-			
-			text.setFont(Font.font(18));
-			text.setText("");
-			text.setVisible(false);////////CHANGE TO FALSE
-			text.setFill(Color.BLACK);////CHANGE TO BLACK
-
-			getChildren().addAll(border, text);
-			
-			setTranslateX(x * TILE_SIZE);
-			setTranslateY(y * TILE_SIZE);
-			
-			setOnMouseClicked(event -> {
-			    if (event.getButton() == MouseButton.PRIMARY) {
-			    	clicked = true;
-			    	open();
-			    }
-			    else if (event.getButton() == MouseButton.SECONDARY) {
-			    	mark();
-			    }
-			});
-		}
-		
-		public void open() {
-			if(isOpen) return;
-			
-			if(clicked) {
-				triesOpen++;
-			}
-			
-			if(this.isMarked) {
-				marked--;
-				isMarked = false;
-				topBar.setText("Mines: " + MINES + "   Marked Tiles: " + marked + "   Time Left: " + String.format("%02d:%02d", seconds_left / 60, seconds_left % 60));
-			}
-			
-			if(this.hasMine) {
-				gameOver("mine");
-				return;
-				
-			}
-			
-			isMarked = false;
-			isOpen = true;
-			text.setVisible(true);
-			border.setFill(Color.LIGHTGREEN);
-			
-			if(text.getText().isEmpty()) {
-				clicked = false;
-				getNeighbours(this).forEach(Tile::open);
-			}
-			
-			if(--tilesToOpen == 0 && !solved) {
-				//victory!
-				gameOver("victory");
-			}
-
-		}
-		
-		public void openHelp(Tile tile) {
-			if(tile.isOpen) return;
-			
-			if(tile.isMarked) {
-				marked--;
-				tile.isMarked = false;
-				topBar.setText("Mines: " + MINES + "   Marked Tiles: " + marked + "   Time Left: " + String.format("%02d:%02d", seconds_left / 60, seconds_left % 60));
-			}
-			
-			tile.isMarked = false;
-			tile.isOpen = true;
-			tile.text.setVisible(true);
-			tile.border.setFill(Color.LIGHTGREEN);
-			
-			if(tile.hasMine) {
-				tile.border.setFill(Color.PALEGOLDENROD);
-				tile.hasMine = false;
-				return;
-			}
-			
-			if(tile.text.getText().isEmpty()) {
-				//clicked = false;
-				//getNeighbours(tile).forEach(Tile::open);
-				tile.isMarked = false;
-				tile.isOpen = true;
-				tile.text.setVisible(true);
-				tile.border.setFill(Color.LIGHTGREEN);
-			}
-			
-			if(--tilesToOpen == 0 && !solved) {
-				//victory!
-				gameOver("victory");
-			}
-
-		}
-		
-		public void mark() {
-			if(isMarked) {
-				this.border.setFill(Color.BLACK);
-				marked--;
-				topBar.setText("Mines: " + MINES + "   Marked Tiles: " + marked + "   Time Left: " + String.format("%02d:%02d", seconds_left / 60, seconds_left % 60));
-				isMarked = false;
-				return;
-			}
-			
-			if(marked >= MINES  || this.isOpen) 
-				return;
-			
-			if(this.hasHyperMine && triesOpen <= 3) {
-				for(int i = 0; i < X_TILES; i++) {
-					openHelp(grid[i][this.y]);
-				}
-				for(int i = 0; i < Y_TILES; i++) {
-					openHelp(grid[this.x][i]);
-				}
-				return;
-			}
-			
-			this.border.setFill(Color.HOTPINK);
-			this.isMarked = true;
-			marked++;
-			topBar.setText("Mines: " + MINES + "   Marked Tiles: " + marked + "   Time Left: " + String.format("%02d:%02d", seconds_left / 60, seconds_left % 60));
-		}
-		
-	}
 	
 	@Override
 	public void start(Stage stage) throws Exception {
-		restartButton = new Button("Play Again");
-		restartButton.setOnAction(event -> {
-			overPopup.hide();
-			stage.setScene(scene);
-			stage.setTitle("Medialab Minesweeper");
-		});
 		
 		//closeRoundsButton
 		closeDetailsButton = new Button("Close");
@@ -711,19 +494,19 @@ public class MinesweeperApp extends Application {
 		startScene = new BorderPane();
 		
 		
-		MenuBar menubar = new MenuBar();
+		menubar = new MenuBar();
 		
-		Menu application = new Menu("Application");
-		MenuItem createGame = new MenuItem("Create");
-		MenuItem loadGame = new MenuItem("Load");
-		MenuItem startGame = new MenuItem("Start");
-		MenuItem exitGame = new MenuItem("Exit");
+		application = new Menu("Application");
+		createGame = new MenuItem("Create");
+		loadGame = new MenuItem("Load");
+		startGame = new MenuItem("Start");
+		exitGame = new MenuItem("Exit");
 		
 		application.getItems().addAll(createGame, loadGame, startGame, exitGame);
 		
-		Menu details = new Menu("Details");
-		MenuItem rounds = new MenuItem("Rounds");
-		MenuItem solution = new MenuItem("Solution");
+		details = new Menu("Details");
+		rounds = new MenuItem("Rounds");
+		solution = new MenuItem("Solution");
 		
 		details.getItems().addAll(rounds, solution);
 		
@@ -734,6 +517,18 @@ public class MinesweeperApp extends Application {
 		Rectangle fillScreen = new Rectangle(W, H);
 		
 		startScene.setCenter(fillScreen);
+		
+		
+		restartButton = new Button("Play Again");
+		restartButton.setOnAction(event -> {
+			BorderPane root = new BorderPane();
+			root.setTop(menubar);
+			root.setCenter(fillScreen);
+			scene = new Scene(root, W, H+50);
+			stage.setScene(scene);
+			stage.setTitle("Medialab Minesweeper");
+			overPopup.hide();
+		});
 		
 		createGame.setOnAction(e -> {
 			
@@ -749,11 +544,11 @@ public class MinesweeperApp extends Application {
 	        StackPane stackPane = new StackPane(rectangle, vBox);
 	        
 	        createPopup.getContent().add(stackPane);
-			createPopup.show(scene.getWindow());
+			createPopup.show(stage);
 			
 		});
 		
-		loadGame.setOnAction(e -> {
+		loadGame.setOnAction(e -> { //add warning if loading in game
 			loadPopup = new Popup();
 			
 			HBox hBox = new HBox(cancelLoadButton, confirmLoadButton);
@@ -771,6 +566,7 @@ public class MinesweeperApp extends Application {
 		});
 		
 		startGame.setOnAction(e -> {
+			
 			gameScene = new Scene(createContent(), W, H+50);
 			
 			stage.setScene(gameScene);
@@ -793,8 +589,19 @@ public class MinesweeperApp extends Application {
 				
 			roundsPopup.getContent().add(content);
 				
-			roundsPopup.show(scene.getWindow());
+			roundsPopup.show(stage);
 			 
+		});
+		
+		solution.setOnAction(e -> { //add warning if used when not in game
+			solved = true;
+			for(int y = 0; y < Y_TILES; y++) {
+				for(int x = 0; x < X_TILES; x++) {
+					Tile tile = grid[x][y];
+					tile.openHelp(tile);
+				}
+			}
+			gameOver("solution");
 		});
 		
 		scene = new Scene(startScene, W, H+50);

@@ -6,8 +6,4 @@ public class InvalidValueException extends Exception {
 	public InvalidValueException(String errMessage) {
         errorMessage = errMessage;
     }
-	
-	public String getErrorMessage() {
-		return errorMessage;
-	}
 }

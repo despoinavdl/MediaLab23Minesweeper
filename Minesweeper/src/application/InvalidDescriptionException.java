@@ -7,7 +7,4 @@ public class InvalidDescriptionException extends Exception {
         errorMessage = errMessage;
     }
 	
-	public String getErrorMessage() {
-		return errorMessage;
-	}
 }
