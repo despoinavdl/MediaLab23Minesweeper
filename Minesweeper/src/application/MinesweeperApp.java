@@ -3,7 +3,6 @@ package application;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-//import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -75,7 +74,7 @@ public class MinesweeperApp extends Application {
 	static Popup loadPopup;
 	
 	static int triesOpen, marked, seconds_left, tilesToOpen, gameIter=0;
-	static boolean victory, solved, clicked;
+	static boolean victory, solved, clicked, ingame;
 	
 	static String game0[] = {"", "", "", "", ""};
 	static String game1[] = {"", "", "", "", ""};
@@ -86,23 +85,19 @@ public class MinesweeperApp extends Application {
 	static TextField scenarioID = new TextField("SCENARIO-ID");
 	static TextField difficulty = new TextField("Difficulty (1 or 2)");
 	static TextField minesNum = new TextField("Number of mines");
-	static TextField hasHyper = new TextField("Hypermine? (yes/no)");
+	static TextField hasHyper = new TextField("Hypermine? (y/n)");
 	static TextField timeAvail = new TextField("Time Available (in seconds)");
 	
 	static FileChooser filechooser = new FileChooser();
 	static File selectedFile;
 	
 	MenuBar menubar;
-	Menu application;
-	MenuItem createGame;
-	MenuItem loadGame;
-	MenuItem startGame;
-	MenuItem exitGame;
-	Menu details;
-	MenuItem rounds;
-	MenuItem solution;
+	Menu application, details;
+	MenuItem createGame, loadGame, startGame, exitGame, rounds, solution;
 	
 	private BorderPane createContent() {
+		
+		ingame = true;
 		victory = true;
 		solved = false;
 		clicked = true;
@@ -267,6 +262,9 @@ public class MinesweeperApp extends Application {
 	
 	public static void gameOver(String cause) {
 		//if(!victory) return; ////////??????????
+		if(!ingame) return;
+		
+		ingame = false;
 		
 		timeline.stop();
 		victory = false;
@@ -296,7 +294,7 @@ public class MinesweeperApp extends Application {
 			StackPane content = new StackPane(new Rectangle(300,70,Color.ALICEBLUE), gameOverPane);
 			
 			overPopup.getContent().add(content);
-			
+			overPopup.setAutoHide(true);
 			overPopup.show(gameScene.getWindow());
 		}
 	}
@@ -387,6 +385,7 @@ public class MinesweeperApp extends Application {
 	
 	@Override
 	public void start(Stage stage) throws Exception {
+		ingame = false;
 		
 		//closeRoundsButton
 		closeDetailsButton = new Button("Close");
@@ -400,7 +399,7 @@ public class MinesweeperApp extends Application {
 			scenarioID.setText("SCENARIO-ID");
 			difficulty.setText("Difficulty (1 or 2)");
 			minesNum.setText("Number of mines");
-			hasHyper.setText("Hypermine? (yes/no)");
+			hasHyper.setText("Hypermine? (y/n)");
 			timeAvail.setText("Time Available (in seconds)");
 			
 			createPopup.hide();
@@ -413,9 +412,9 @@ public class MinesweeperApp extends Application {
 			BufferedWriter writer = null;
 			try {
 				writer = new BufferedWriter(new FileWriter("./medialab/" + scenarioID.getText() + ".txt"));
-				if(hasHyper.getText().equals("yes")) 
+				if(hasHyper.getText().equals("y")) 
 					hasHyper.setText("1");
-				else if(hasHyper.getText().equals("no"))
+				else if(hasHyper.getText().equals("n"))
 					hasHyper.setText("0");
 				else
 					hasHyper.setText("invalid");
@@ -432,7 +431,7 @@ public class MinesweeperApp extends Application {
 			scenarioID.setText("SCENARIO-ID");
 			difficulty.setText("Difficulty (1 or 2)");
 			minesNum.setText("Number of mines");
-			hasHyper.setText("Hypermine? (yes/no)");
+			hasHyper.setText("Hypermine? (y/n)");
 			timeAvail.setText("Time Available (in seconds)");
 			
 			createPopup.hide();
@@ -548,7 +547,18 @@ public class MinesweeperApp extends Application {
 			
 		});
 		
-		loadGame.setOnAction(e -> { //add warning if loading in game
+		loadGame.setOnAction(e -> {
+			if(ingame) {
+				Alert alert = new Alert(Alert.AlertType.ERROR);
+				alert.setTitle("Error");
+				alert.setHeaderText(null);
+				alert.getDialogPane().setStyle("-fx-font-size: 10pt;");
+				alert.setContentText("You can't use that feature while playing");
+
+				alert.showAndWait();
+				return;
+			}
+			
 			loadPopup = new Popup();
 			
 			HBox hBox = new HBox(cancelLoadButton, confirmLoadButton);
@@ -593,7 +603,17 @@ public class MinesweeperApp extends Application {
 			 
 		});
 		
-		solution.setOnAction(e -> { //add warning if used when not in game
+		solution.setOnAction(e -> { 
+			if(!ingame) {
+				Alert alert = new Alert(Alert.AlertType.ERROR);
+				alert.setTitle("Error");
+				alert.setHeaderText(null);
+				alert.getDialogPane().setStyle("-fx-font-size: 10pt;");
+				alert.setContentText("You can't use that feature while playing");
+
+				alert.showAndWait();
+				return;
+			}
 			solved = true;
 			for(int y = 0; y < Y_TILES; y++) {
 				for(int x = 0; x < X_TILES; x++) {

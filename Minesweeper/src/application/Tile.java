@@ -1,6 +1,5 @@
 package application;
 
-//import application.MinesweeperApp.*;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -37,10 +36,12 @@ public class Tile extends StackPane {
 		
 		setOnMouseClicked(event -> {
 		    if (event.getButton() == MouseButton.PRIMARY) {
+		    	if(!MinesweeperApp.ingame) return;
 		    	MinesweeperApp.clicked = true;
 		    	open();
 		    }
 		    else if (event.getButton() == MouseButton.SECONDARY) {
+		    	if(!MinesweeperApp.ingame) return;
 		    	mark();
 		    }
 		});
