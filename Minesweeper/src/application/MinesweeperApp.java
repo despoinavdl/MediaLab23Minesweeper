@@ -609,7 +609,7 @@ public class MinesweeperApp extends Application {
 				alert.setTitle("Error");
 				alert.setHeaderText(null);
 				alert.getDialogPane().setStyle("-fx-font-size: 10pt;");
-				alert.setContentText("You can't use that feature while playing");
+				alert.setContentText("You can't use that feature while not in-game");
 
 				alert.showAndWait();
 				return;
