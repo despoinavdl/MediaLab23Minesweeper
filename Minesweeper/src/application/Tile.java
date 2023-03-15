@@ -7,6 +7,11 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
+
+/**
+ * This class represents a Tile in a Minesweeper game board. 
+ *
+ */
 public class Tile extends StackPane {
 	int x,y;
 	boolean hasMine, hasHyperMine, isOpen = false, isMarked = false;
@@ -14,7 +19,14 @@ public class Tile extends StackPane {
 	Rectangle border = new Rectangle(MinesweeperApp.TILE_SIZE - 2, MinesweeperApp.TILE_SIZE -2);
 	Text text = new Text();
 	
-	
+	/**
+	 * Constructs a new Tile object with given x and y coordinates, mine and hypermine statuses.
+	 * 
+	 * @param x The x-coordinate of the Tile on the Minesweeper board (integer between 0 and X_TILES).
+	 * @param y The y-coordinate of the Tile on the Minesweeper board (integer between 0 and Y_TILES).
+	 * @param hasMine A boolean value indicating whether or not the Tile contains a mine.
+	 * @param hasHyperMine A boolean value indicating whether or not the Tile contains a hypermine.
+	 */
 	public Tile(int x, int y, boolean hasMine, boolean hasHyperMine) {
 		this.x = x;
 		this.y = y;
@@ -26,8 +38,8 @@ public class Tile extends StackPane {
 		
 		text.setFont(Font.font(18));
 		text.setText("");
-		text.setVisible(false);////////CHANGE TO FALSE
-		text.setFill(Color.BLACK);////CHANGE TO BLACK
+		text.setVisible(false);
+		text.setFill(Color.BLACK);
 
 		getChildren().addAll(border, text);
 		
@@ -47,6 +59,14 @@ public class Tile extends StackPane {
 		});
 	}
 	
+	
+	/**
+	 * Opens a Tile if it's not already open and updates the game state.
+	 * If the Tile is marked, the mark is removed.
+	 * If the Tile has a mine, the game ends in defeat.
+	 * If the Tile is empty, all adjacent tiles are opened recursively.
+	 * If all Tiles that don't contain a mine are opened, the game ends in victory.
+	 */
 	void open() {
 		if(isOpen) return;
 		
@@ -85,6 +105,11 @@ public class Tile extends StackPane {
 
 	}
 	
+	/**
+	 * A helper function for the hypermine's ability.
+	 * Tiles opened by this function 
+	 * @param tile The tile to be opened.
+	 */
 	void openHelp(Tile tile) {
 		if(tile.isOpen) return;
 		
@@ -108,8 +133,6 @@ public class Tile extends StackPane {
 		}
 		
 		if(tile.text.getText().isEmpty()) {
-			//clicked = false;
-			//getNeighbours(tile).forEach(Tile::open);
 			tile.isMarked = false;
 			tile.isOpen = true;
 			tile.text.setVisible(true);
@@ -123,6 +146,12 @@ public class Tile extends StackPane {
 
 	}
 	
+	/**
+	 * Marks a closed Tile.
+	 * If the Tile is open or the maximum number of marks has already been placed, the method does nothing.
+	 * If the tile has a hypermine and the player has not yet opened three tiles, the hypermine explodes,
+	 * and all tiles in the same row and column as the hypermine are opened using the helper function openHelp().
+	 */
 	void mark() {
 		if(isMarked) {
 			this.border.setFill(Color.BLACK);
