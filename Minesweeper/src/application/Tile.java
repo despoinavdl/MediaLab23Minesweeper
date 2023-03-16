@@ -149,7 +149,7 @@ public class Tile extends StackPane {
 	/**
 	 * Marks a closed Tile.
 	 * If the Tile is open or the maximum number of marks has already been placed, the method does nothing.
-	 * If the tile has a hypermine and the player has not yet opened three tiles, the hypermine explodes,
+	 * If the tile has a hypermine and the player has opened at most four tiles, the hypermine explodes,
 	 * and all tiles in the same row and column as the hypermine are opened using the helper function openHelp().
 	 */
 	public void mark() {
@@ -166,7 +166,7 @@ public class Tile extends StackPane {
 		if(MinesweeperApp.marked >= MinesweeperApp.MINES  || this.isOpen) 
 			return;
 		
-		if(this.hasHyperMine && MinesweeperApp.triesOpen <= 3) {
+		if(this.hasHyperMine && MinesweeperApp.triesOpen <= 4) {
 			for(int i = 0; i < MinesweeperApp.X_TILES; i++) {
 				openHelp(MinesweeperApp.grid[i][this.y]);
 			}
